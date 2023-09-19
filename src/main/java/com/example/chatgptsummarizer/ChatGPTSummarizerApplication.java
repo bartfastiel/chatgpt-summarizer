@@ -1,5 +1,6 @@
 package com.example.chatgptsummarizer;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -34,18 +35,15 @@ public class ChatGPTSummarizerApplication {
 }
 
 @RestController
+@RequiredArgsConstructor
 class SummarizeController {
 
     private final WebClient webClient;
 
-    SummarizeController(WebClient webClient) {
-        this.webClient = webClient;
-    }
-
     @PostMapping(value = "/summarize", consumes = MediaType.TEXT_PLAIN_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
     public Mono<String> summarize(@RequestBody String content) {
         return webClient.post()
-                .bodyValue(new ChatGPTRequest("Summarize the following (keep in same language, shorten): " + content))
+                .bodyValue(new ChatGPTRequest("Wähle eine Produktkategorie (ein Wort) für: " + content))
                 .retrieve()
                 .bodyToMono(ChatGPTResponse.class)
                 .map(ChatGPTResponse::text);
@@ -57,9 +55,6 @@ record ChatGPTMessage(
         String role,
         String content
 ) {
-    ChatGPTMessage(String content) {
-        this("user", content);
-    }
 }
 
 record ChatGPTRequest(
@@ -67,7 +62,7 @@ record ChatGPTRequest(
         List<ChatGPTMessage> messages
 ) {
     ChatGPTRequest(String message) {
-        this("gpt-3.5-turbo", Collections.singletonList(new ChatGPTMessage(message)));
+        this("gpt-3.5-turbo", Collections.singletonList(new ChatGPTMessage("user", message)));
     }
 }
 
